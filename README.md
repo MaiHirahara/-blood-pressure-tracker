@@ -7,7 +7,7 @@
 - Flask (Python)
 - SQLite
 - Chart.js
-- Bootstrap (UI調整)
+
 
 ## 📌 インストール & 実行方法
 ```bash
