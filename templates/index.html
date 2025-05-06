@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+    <title>血圧記録一覧</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>血圧記録</h1>
+    <a href="/add" class="add-btn">➕ 新しい記録を追加</a>
+    <table border="1">
+        <tr>
+            <th>収縮期</th>
+            <th>拡張期</th>
+            <th>日時</th>
+            <th>備考</th>
+        </tr>
+        {% for record in records %}
+        <tr>
+            <td>{{ record['systolic'] }}</td>
+            <td>{{ record['diastolic'] }}</td>
+            <td>{{ record['date_time'] }}</td>
+            <td>{{ record['note'] }}</td>
+            <!-- 編集削除リンク -->
+            <td>
+                <a href="/edit/{{ record['id'] }}" class="edit-btn">編集</a>
+                <form action="/delete/{{ record['id'] }}" method="post" style="display:inline;">
+                    <button type="submit" class="delete-btn">削除</button>
+                </form>
+            </td>
+        </tr>        
+        {% endfor %}
+    </table>
+</body>
+</html>

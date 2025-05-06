@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>血圧データのグラフ</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>血圧の推移</h1>
+    <button id="updateChartBtn" class="btn">データ更新</button>
+    <canvas id="bloodPressureChart" style="width: 600px; height: 300px;"></canvas>
+    <label for="startDate">開始日:</label>
+    <input type="date" id="startDate">
+    <label for="endDate">終了日:</label>
+    <input type="date" id="endDate">
+    <button id="filterChartBtn">期間で表示</button>
+    <canvas id="bloodPressureChart"></canvas>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const ctx = document.getElementById("bloodPressureChart").getContext("2d");
+    
+            function fetchLast30DaysData(chart) {
+                fetch("/chart-data")
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            alert("データがありません！");
+                            return;
+                        }
+    
+                        const labels = data.map(item => item.date);
+                        const systolicData = data.map(item => item.systolic);
+                        const diastolicData = data.map(item => item.diastolic);
+    
+                        chart.data.labels = labels;
+                        chart.data.datasets[0].data = systolicData;
+                        chart.data.datasets[1].data = diastolicData;
+                        chart.update();
+                    });
+            }
+    
+            // ✅ 初回ロード時は「最新のデータがある日から30日間」のデータを取得
+            const bloodPressureChart = new Chart(ctx, {
+                type: "line",
+                data: {
+                    labels: [],
+                    datasets: [
+                        {
+                            label: "収縮期血圧 (systolic)",
+                            data: [],
+                            borderColor: "red",
+                            fill: false
+                        },
+                        {
+                            label: "拡張期血圧 (diastolic)",
+                            data: [],
+                            borderColor: "blue",
+                            fill: false
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true
+                }
+            });
+    
+            fetchLast30DaysData(bloodPressureChart);
+    
+            // ✅ 「データ更新」ボタンを押したときも「最新のデータがある日から30日間」のデータを取得
+            document.getElementById("updateChartBtn").addEventListener("click", function() {
+                fetchLast30DaysData(bloodPressureChart);
+            });
+        });
+    </script>
+</body>
+</html>

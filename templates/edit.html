@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+    <title>記録の編集</title>
+</head>
+<body>
+    <h1>血圧記録の編集</h1>
+    <form method="POST">
+        <label>収縮期血圧:</label>
+        <input type="number" name="systolic" value="{{ record['systolic'] }}" required><br>
+        
+        <label>拡張期血圧:</label>
+        <input type="number" name="diastolic" value="{{ record['diastolic'] }}" required><br>
+        
+        <label>備考:</label>
+        <input type="text" name="note" value="{{ record['note'] }}"><br>
+        
+        <button type="submit">更新</button>
+    </form>
+    <a href="/">戻る</a>
+</body>
+</html>

@@ -1,0 +1,148 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa;
+    text-align: center;
+    padding: 20px;
+}
+table {
+    width: 80%;
+    margin: auto;
+    border-collapse: collapse;
+}
+th, td {
+    padding: 10px;
+    border: 1px solid #ddd;
+}
+button {
+    padding: 5px 10px;
+    background-color: red;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+button:hover {
+    background-color: darkred;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    cursor: pointer;
+}
+.delete-btn:hover {
+    background-color: #c82333;
+}
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+    padding: 6px 10px;
+    text-decoration: none;
+    border-radius: 5px;
+}
+.edit-btn:hover {
+    background-color: #0056b3;
+}
+
+h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+}
+
+table {
+    width: 80%;
+    margin: auto;
+}
+
+.add-btn {
+    display: inline-block;
+    padding: 10px 15px;
+    background-color: #28a745;
+    color: white;
+    font-size: 16px;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: 0.3s;
+}
+.add-btn:hover {
+    background-color: #218838;
+}
+
+table {
+    width: 80%;
+    margin: auto;
+    border-collapse: collapse;
+    background-color: #fff;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* ヘッダーのデザイン */
+th {
+    background-color: #007bff;
+    color: white;
+    padding: 10px;
+    font-size: 18px;
+}
+
+/* セルのデザイン */
+td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: center;
+}
+
+/* 交互の行に背景色を適用 */
+tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* 全体のレイアウト調整 */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+    background-color: #f8f9fa;
+}
+
+/* テーブルの幅を調整 */
+table {
+    width: 100%;
+    max-width: 800px;
+    margin: auto;
+    border-collapse: collapse;
+}
+
+/* 小さい画面では余白を調整 */
+td, th {
+    padding: 8px;
+    font-size: 14px;
+}
+
+/* 編集・削除ボタンのデザイン */
+.edit-btn, .delete-btn {
+    display: inline-block;
+    width: auto; /* 自動で適切なサイズに */
+    padding: 8px 12px;
+    font-size: 16px;
+}
+
+/* 🔹 スマホ画面用の調整 */
+@media screen and (max-width: 600px) {
+    .edit-btn, .delete-btn {
+        display: inline-block; /* 横並びのままにする */
+        font-size: 16px; /* フォントサイズは変えすぎない */
+        padding: 6px 10px; /* スマホでは少し小さめに */
+        width: auto; /* 幅を固定せず、自然なサイズに */
+        margin: 5px; /* 間隔を適度に確保 */
+    }
+}
+
+/* 🔹 グラフ描画 */
+canvas {
+    max-width: 600px;  /* 🔹 最大600pxまで拡大可能 */
+    height: auto;  /* 🔹 縦横比を維持 */
+    display: block;
+    margin: auto;
+}
+
