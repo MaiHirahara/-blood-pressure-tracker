@@ -1,26 +1,23 @@
 from flask import Flask, render_template, request, redirect
-import sqlite3
+import psycopg2  # ✅ SQLiteからPostgreSQLへ変更！
+import os
 from datetime import datetime, timezone, timedelta
+import pytz
 
 app = Flask(__name__)
 
+# 🔹 PostgreSQLへの接続
 def get_db_connection():
-    conn = sqlite3.connect('blood_pressure.db')
-    conn.row_factory = sqlite3.Row
+    DATABASE_URL = os.getenv("DATABASE_URL")  # ✅ 環境変数から取得
+    conn = psycopg2.connect(DATABASE_URL)
     return conn
 
-# 🔹 JSTに変換する関数
-import pytz
-
+# JSTに変換する関数（変更なし）
 def convert_to_jst(utc_time):
     utc_tz = pytz.utc
     jst_tz = pytz.timezone("Asia/Tokyo")
-
-    # ✅ UTCとして認識した後、JSTへ変換
     utc_time = utc_time.replace(tzinfo=utc_tz)
     jst_time = utc_time.astimezone(jst_tz)
-
-    print(f"【DEBUG】JST変換後（修正済）: {jst_time.strftime('%Y-%m-%d %H:%M:%S')}")  # ✅ 確認用
     return jst_time.strftime('%Y-%m-%d %H:%M:%S')
 
 @app.route('/')
