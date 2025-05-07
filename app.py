@@ -55,31 +55,41 @@ import pytz
 @app.route('/chart-data')
 def get_chart_data():
     conn = get_db_connection()
-    latest_record = conn.execute('SELECT date_time FROM blood_pressure ORDER BY date_time DESC LIMIT 1').fetchone()
-    
-    if not latest_record:
-        print("【DEBUG】データなし！")  # ✅ デバッグ用
-        return json.dumps([])
 
-    latest_date = latest_record["date_time"]
+    # ✅ フロントエンドから渡される「開始日」「終了日」を取得
+    start_date = request.args.get("start")
+    end_date = request.args.get("end")
 
-    try:
-        # ✅ まず `'%Y-%m-%d %H:%M:%S'` のフォーマットで変換を試す
-        latest_date_dt = datetime.strptime(latest_date, '%Y-%m-%d %H:%M:%S')
-    except ValueError:
-        # ✅ ダメなら `'%Y-%m-%dT%H:%M'` で再試行
-        latest_date_dt = datetime.strptime(latest_date, '%Y-%m-%dT%H:%M')
+    print(f"【DEBUG】リクエストされた期間: {start_date} 〜 {end_date}")  # ✅ ここを追加！
 
-    # ✅ 1ヶ月前のデータ範囲を計算
-    one_month_ago = (latest_date_dt - timedelta(days=30)).strftime('%Y-%m-%d')
+    if start_date and end_date:
+        # ✅ 期間指定がある場合、`start_date` と `end_date` のデータを取得
+        query = 'SELECT date_time, systolic, diastolic FROM blood_pressure WHERE date_time BETWEEN ? AND ? ORDER BY date_time'
+        records = conn.execute(query, (start_date, end_date)).fetchall()
+    else:
+        # ✅ 期間指定なしなら、過去30日間のデータを取得
+        latest_record = conn.execute('SELECT date_time FROM blood_pressure ORDER BY date_time DESC LIMIT 1').fetchone()
 
-    query = 'SELECT date_time, systolic, diastolic FROM blood_pressure WHERE date_time BETWEEN ? AND ? ORDER BY date_time'
-    records = conn.execute(query, (one_month_ago, latest_date)).fetchall()
+        if not latest_record:
+            print("【DEBUG】データなし！")  # ✅ デバッグ用
+            return json.dumps([])
+
+        latest_date = latest_record["date_time"]
+
+        try:
+            latest_date_dt = datetime.strptime(latest_date, '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            latest_date_dt = datetime.strptime(latest_date, '%Y-%m-%dT%H:%M')
+
+        one_month_ago = (latest_date_dt - timedelta(days=30)).strftime('%Y-%m-%d')
+        query = 'SELECT date_time, systolic, diastolic FROM blood_pressure WHERE date_time BETWEEN ? AND ? ORDER BY date_time'
+        records = conn.execute(query, (one_month_ago, latest_date)).fetchall()
+
     conn.close()
 
     data = [{"date": record["date_time"], "systolic": record["systolic"], "diastolic": record["diastolic"]} for record in records]
 
-    print(f"【DEBUG】取得データ: {data}")  # ✅ ターミナルで確認！
+    print(f"【DEBUG】取得データ: {data}")  # ✅ デバッグ用
 
     return json.dumps(data)
 

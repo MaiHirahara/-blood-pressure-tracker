@@ -31,18 +31,44 @@
                             return;
                         }
     
-                        const labels = data.map(item => item.date);
-                        const systolicData = data.map(item => item.systolic);
-                        const diastolicData = data.map(item => item.diastolic);
-    
-                        chart.data.labels = labels;
-                        chart.data.datasets[0].data = systolicData;
-                        chart.data.datasets[1].data = diastolicData;
-                        chart.update();
+                        updateChart(chart, data);
                     });
             }
     
-            // ✅ 初回ロード時は「最新のデータがある日から30日間」のデータを取得
+            function fetchFilteredData(chart) {
+                const startDate = document.getElementById("startDate").value;
+                const endDate = document.getElementById("endDate").value;
+                // ここでデバッグ用のログを追加します
+                console.log(`【DEBUG】開始日: ${startDate}, 終了日: ${endDate}`);  // ✅ ここを追加！
+
+                if (!startDate || !endDate) {
+                    alert("開始日と終了日を入力してください！");
+                    return;
+                }
+    
+                fetch(`/chart-data?start=${startDate}&end=${endDate}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.length === 0) {
+                            alert("指定された期間のデータがありません！");
+                            return;
+                        }
+    
+                        updateChart(chart, data);
+                    });
+            }
+    
+            function updateChart(chart, data) {
+                const labels = data.map(item => item.date);
+                const systolicData = data.map(item => item.systolic);
+                const diastolicData = data.map(item => item.diastolic);
+    
+                chart.data.labels = labels;
+                chart.data.datasets[0].data = systolicData;
+                chart.data.datasets[1].data = diastolicData;
+                chart.update();
+            }
+    
             const bloodPressureChart = new Chart(ctx, {
                 type: "line",
                 data: {
@@ -70,9 +96,12 @@
     
             fetchLast30DaysData(bloodPressureChart);
     
-            // ✅ 「データ更新」ボタンを押したときも「最新のデータがある日から30日間」のデータを取得
             document.getElementById("updateChartBtn").addEventListener("click", function() {
                 fetchLast30DaysData(bloodPressureChart);
+            });
+    
+            document.getElementById("filterChartBtn").addEventListener("click", function() {
+                fetchFilteredData(bloodPressureChart);
             });
         });
     </script>
