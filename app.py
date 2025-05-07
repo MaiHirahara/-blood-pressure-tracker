@@ -1,15 +1,15 @@
 from flask import Flask, render_template, request, redirect
-import psycopg2  # ✅ SQLiteからPostgreSQLへ変更！
+import sqlite3  # ✅ SQLiteを使用！
 import os
 from datetime import datetime, timezone, timedelta
 import pytz
 
 app = Flask(__name__)
 
-# 🔹 PostgreSQLへの接続
+# 🔹 SQLiteへの接続
 def get_db_connection():
-    DATABASE_URL = os.getenv("postgresql://blood_pressure_db_user:NRSxDzb1rqJFvZL6sQENgAI59hvpEsRT@dpg-d0dkedp5pdvs7399kqag-a.oregon-postgres.render.com/blood_pressure_db")  # ✅ 環境変数から取得
-    conn = psycopg2.connect(DATABASE_URL)
+    conn = sqlite3.connect("blood_pressure.db")  # ✅ SQLiteのデータベースに接続
+    conn.row_factory = sqlite3.Row  # ✅ 辞書型でデータを取得できるように設定
     return conn
 
 # JSTに変換する関数（変更なし）
@@ -31,19 +31,25 @@ def index():
     updated_records = []
     for record in records:
         record_dict = {
-            'date_time': record[0],  # ✅ インデックスでデータ取得
+            'date_time': str(record[3]),  # ✅ `int` を `str` に変換（重要！）
             'systolic': record[1],
             'diastolic': record[2],
-            'note': record[3]
+            'note': record[4]
         }
 
-        try:
-            dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%d %H:%M:%S')
-        except ValueError:
-            dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%dT%H:%M')
+        print(f"【DEBUG】取得した date_time の値: {record_dict['date_time']} （型: {type(record_dict['date_time'])}）")
+        print(f"【DEBUG】元データ: {record[0]}（型: {type(record[0])}）")
+        print(f"【DEBUG】変換後の date_time: {record_dict['date_time']}（型: {type(record_dict['date_time'])}）")
+        print(f"【DEBUG】record の内容: {record}")
+        print(f"【DEBUG】record[0]: {record[0]}（型: {type(record[0])}）")
 
-        # ✅ データベースの時間が既にJSTなら、変換しない！
-        record_dict['date_time'] = dt_obj.strftime('%Y-%m-%d %H:%M:%S')
+        try:
+            dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%d %H:%M:%S')  # ✅ SQLiteのデータはすでに適切なフォーマットのはず！
+        except ValueError:
+            dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%dT%H:%M')  # ✅ フォーマットが違う場合も対応
+
+        # ✅ JSTに変換（必要な場合のみ）
+        record_dict['date_time'] = convert_to_jst(dt_obj)
 
         updated_records.append(record_dict)
 
