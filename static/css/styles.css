@@ -127,6 +127,22 @@ td, th {
     font-size: 16px;
 }
 
+/* グラフボタンデザイン */
+.chart-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    font-size: 16px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    transition: background-color 0.3s;
+}
+
+.chart-btn:hover {
+    background-color: #0056b3;
+}
+
 /* 🔹 スマホ画面用の調整 */
 @media screen and (max-width: 600px) {
     .edit-btn, .delete-btn {
