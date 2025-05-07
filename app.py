@@ -10,8 +10,17 @@ def get_db_connection():
     return conn
 
 # 🔹 JSTに変換する関数
+import pytz
+
 def convert_to_jst(utc_time):
-    jst_time = utc_time.replace(tzinfo=timezone.utc) + timedelta(hours=9)
+    utc_tz = pytz.utc
+    jst_tz = pytz.timezone("Asia/Tokyo")
+
+    # ✅ UTCとして認識した後、JSTへ変換
+    utc_time = utc_time.replace(tzinfo=utc_tz)
+    jst_time = utc_time.astimezone(jst_tz)
+
+    print(f"【DEBUG】JST変換後（修正済）: {jst_time.strftime('%Y-%m-%d %H:%M:%S')}")  # ✅ 確認用
     return jst_time.strftime('%Y-%m-%d %H:%M:%S')
 
 @app.route('/')
@@ -20,52 +29,57 @@ def index():
     records = conn.execute('SELECT * FROM blood_pressure ORDER BY date_time DESC').fetchall()
     conn.close()
 
-    # 🔹 JST変換を適用（辞書に変換してから変更）
     updated_records = []
     for record in records:
-        record_dict = dict(record)  # 🔹 sqlite3.Row を辞書に変換
-        record_dict['date_time'] = convert_to_jst(datetime.strptime(record_dict['date_time'], '%Y-%m-%d %H:%M:%S'))
+        record_dict = dict(record)
+
+        try:
+            dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%d %H:%M:%S')
+        except ValueError:
+            dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%dT%H:%M')
+
+        # ✅ データベースの時間が既にJSTなら、変換しない！
+        record_dict['date_time'] = dt_obj.strftime('%Y-%m-%d %H:%M:%S')
+
         updated_records.append(record_dict)
 
     return render_template('index.html', records=updated_records)
 
-# ✅ グラフ表示ページを追加（この位置が適切！）
 @app.route('/chart')
 def chart():
     return render_template('chart.html')
 
 import json
-from datetime import datetime
-import pytz  # 🔹 タイムゾーン変換用
+import pytz
 
 @app.route('/chart-data')
 def get_chart_data():
     conn = get_db_connection()
-
-    # 🔹 最新のデータがある日付を取得
     latest_record = conn.execute('SELECT date_time FROM blood_pressure ORDER BY date_time DESC LIMIT 1').fetchone()
     
     if not latest_record:
-        return json.dumps([])  # 🔹 データがない場合は空のリストを返す
-    
-    latest_date = latest_record["date_time"]  # 🔹 最新の日付
-    one_month_ago = (datetime.strptime(latest_date, '%Y-%m-%d %H:%M:%S') - timedelta(days=30)).strftime('%Y-%m-%d')
+        print("【DEBUG】データなし！")  # ✅ デバッグ用
+        return json.dumps([])
+
+    latest_date = latest_record["date_time"]
+
+    try:
+        # ✅ まず `'%Y-%m-%d %H:%M:%S'` のフォーマットで変換を試す
+        latest_date_dt = datetime.strptime(latest_date, '%Y-%m-%d %H:%M:%S')
+    except ValueError:
+        # ✅ ダメなら `'%Y-%m-%dT%H:%M'` で再試行
+        latest_date_dt = datetime.strptime(latest_date, '%Y-%m-%dT%H:%M')
+
+    # ✅ 1ヶ月前のデータ範囲を計算
+    one_month_ago = (latest_date_dt - timedelta(days=30)).strftime('%Y-%m-%d')
 
     query = 'SELECT date_time, systolic, diastolic FROM blood_pressure WHERE date_time BETWEEN ? AND ? ORDER BY date_time'
     records = conn.execute(query, (one_month_ago, latest_date)).fetchall()
     conn.close()
 
-    # 🔹 JSTに変換してデータを整理
-    utc_tz = pytz.utc
-    jst_tz = pytz.timezone("Asia/Tokyo")
+    data = [{"date": record["date_time"], "systolic": record["systolic"], "diastolic": record["diastolic"]} for record in records]
 
-    data = [{"date": datetime.strptime(record["date_time"], "%Y-%m-%d %H:%M:%S")
-                        .replace(tzinfo=utc_tz)
-                        .astimezone(jst_tz)
-                        .strftime("%Y/%m/%d %H:%M"),
-             "systolic": record["systolic"],
-             "diastolic": record["diastolic"]}
-            for record in records]
+    print(f"【DEBUG】取得データ: {data}")  # ✅ ターミナルで確認！
 
     return json.dumps(data)
 
@@ -84,13 +98,24 @@ def add():
         diastolic = request.form['diastolic']
         note = request.form['note']
 
+        # ✅ `date_time` を手動入力 or 未入力なら現在時刻
+        date_time = request.form.get('date_time', '')
+        if not date_time:
+            date_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')  # ✅ 秒まで統一
+        else:
+            try:
+        # ✅ 最初に `'%Y-%m-%d %H:%M:%S'` フォーマットを試す
+                date_time = datetime.strptime(date_time, '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%d %H:%M:%S')
+            except ValueError:
+        # ✅ ダメなら `'%Y-%m-%dT%H:%M'` を試して変換
+                date_time = datetime.strptime(date_time, '%Y-%m-%dT%H:%M').strftime('%Y-%m-%d %H:%M:%S')
         conn = get_db_connection()
-        conn.execute('INSERT INTO blood_pressure (systolic, diastolic, note) VALUES (?, ?, ?)',
-                     (systolic, diastolic, note))
+        conn.execute('INSERT INTO blood_pressure (systolic, diastolic, date_time, note) VALUES (?, ?, ?, ?)',
+                     (systolic, diastolic, date_time, note))
         conn.commit()
         conn.close()
         return redirect('/')
-       
+
     return render_template('add.html')
 
 @app.route('/edit/<int:id>', methods=['GET', 'POST'])
