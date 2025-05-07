@@ -56,22 +56,19 @@ import pytz
 def get_chart_data():
     conn = get_db_connection()
 
-    # ✅ フロントエンドから渡される「開始日」「終了日」を取得
     start_date = request.args.get("start")
     end_date = request.args.get("end")
 
-    print(f"【DEBUG】リクエストされた期間: {start_date} 〜 {end_date}")  # ✅ ここを追加！
+    print(f"【DEBUG】リクエストされた期間: {start_date} 〜 {end_date}") 
 
     if start_date and end_date:
-        # ✅ 期間指定がある場合、`start_date` と `end_date` のデータを取得
         query = 'SELECT date_time, systolic, diastolic FROM blood_pressure WHERE date_time BETWEEN ? AND ? ORDER BY date_time'
         records = conn.execute(query, (start_date, end_date)).fetchall()
     else:
-        # ✅ 期間指定なしなら、過去30日間のデータを取得
         latest_record = conn.execute('SELECT date_time FROM blood_pressure ORDER BY date_time DESC LIMIT 1').fetchone()
 
         if not latest_record:
-            print("【DEBUG】データなし！")  # ✅ デバッグ用
+            print("【DEBUG】データなし！")
             return json.dumps([])
 
         latest_date = latest_record["date_time"]
@@ -87,11 +84,18 @@ def get_chart_data():
 
     conn.close()
 
-    data = [{"date": record["date_time"], "systolic": record["systolic"], "diastolic": record["diastolic"]} for record in records]
+    jst_data = []
+    for record in records:
+        jst_date_time = convert_to_jst(datetime.strptime(record["date_time"], '%Y-%m-%d %H:%M:%S'))
+        jst_data.append({
+            "date": jst_date_time,
+            "systolic": record["systolic"],
+            "diastolic": record["diastolic"]
+        })
 
-    print(f"【DEBUG】取得データ: {data}")  # ✅ デバッグ用
+    print(f"【DEBUG】JST変換後のデータ: {jst_data}") 
 
-    return json.dumps(data)
+    return json.dumps(jst_data)
 
 @app.route('/delete/<int:id>', methods=['POST'])
 def delete_record(id):
