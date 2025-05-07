@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 # 🔹 PostgreSQLへの接続
 def get_db_connection():
-    DATABASE_URL = os.getenv("DATABASE_URL")  # ✅ 環境変数から取得
+    DATABASE_URL = os.getenv("postgresql://blood_pressure_db_user:NRSxDzb1rqJFvZL6sQENgAI59hvpEsRT@dpg-d0dkedp5pdvs7399kqag-a.oregon-postgres.render.com/blood_pressure_db")  # ✅ 環境変数から取得
     conn = psycopg2.connect(DATABASE_URL)
     return conn
 
@@ -23,12 +23,19 @@ def convert_to_jst(utc_time):
 @app.route('/')
 def index():
     conn = get_db_connection()
-    records = conn.execute('SELECT * FROM blood_pressure ORDER BY date_time DESC').fetchall()
-    conn.close()
+    cursor = conn.cursor()  # ✅ カーソルを作成
+    cursor.execute('SELECT * FROM blood_pressure ORDER BY date_time DESC')  # ✅ クエリ実行
+    records = cursor.fetchall()  # ✅ 結果を取得
+    cursor.close()  # ✅ カーソルを閉じる
 
     updated_records = []
     for record in records:
-        record_dict = dict(record)
+        record_dict = {
+            'date_time': record[0],  # ✅ インデックスでデータ取得
+            'systolic': record[1],
+            'diastolic': record[2],
+            'note': record[3]
+        }
 
         try:
             dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%d %H:%M:%S')
