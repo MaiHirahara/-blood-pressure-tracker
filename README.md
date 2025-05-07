@@ -11,7 +11,7 @@
 
 ## 📌 インストール & 実行方法
 ```bash
-git clone https://github.com/MaiHirahara/blood-pressure-tracker.git
-cd blood-pressure-tracker
+git clone https://github.com/MaiHirahara/-blood-pressure-tracker.git
+cd -blood-pressure-tracker
 pip install -r requirements.txt
 python app.py
