@@ -120,11 +120,29 @@ td, th {
 }
 
 /* 編集・削除ボタンのデザイン */
-.edit-btn, .delete-btn {
+.btn {
     display: inline-block;
-    width: auto; /* 自動で適切なサイズに */
     padding: 8px 12px;
     font-size: 16px;
+    font-weight: bold;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+}
+
+.edit-btn {
+    background-color: #007bff;
+    color: white;
+}
+
+.delete-btn {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn:hover {
+    opacity: 0.8;
 }
 
 /* グラフボタンデザイン */

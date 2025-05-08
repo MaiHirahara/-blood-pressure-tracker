@@ -16,21 +16,33 @@
             <th>備考</th>
         </tr>
         {% for record in records %}
-        <tr>
+        <tr id="row-{{ record['id'] }}"> <!-- ✅ 削除後にこの行を消す -->
             <td>{{ record['systolic'] }}</td>
             <td>{{ record['diastolic'] }}</td>
             <td>{{ record['date_time'] }}</td>
             <td>{{ record['note'] }}</td>
-            <!-- 編集削除リンク -->
             <td>
-                <a href="/edit/{{ record['id'] }}" class="edit-btn">編集</a>
-                <form action="/delete/{{ record['id'] }}" method="post" style="display:inline;">
-                    <button type="submit" class="delete-btn">削除</button>
-                </form>
+                <a href="/edit/{{ record['id'] }}" class="btn edit-btn">編集</a>
+                <button class="btn delete-btn" onclick="deleteRecord({{ record['id']}})">削除</button>
             </td>
-        </tr>        
+        </tr> 
         {% endfor %}
     </table>
+    <script>
+        function deleteRecord(recordId) {
+            if (!confirm("このデータを削除しますか？")) return;  // ✅ 削除前に確認ダイアログ
+        
+            fetch(`/delete/${recordId}`, { method: "POST" })  // ✅ 削除リクエスト送信
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById(`row-${recordId}`).remove();  // ✅ 画面上から該当行を削除！
+                    } else {
+                        alert("削除に失敗しました");
+                    }
+                })
+                .catch(error => console.error("削除エラー:", error));
+        }
+        </script>
     <div><a href="#">↑ ページトップへ戻る</a></div>
 </body>
 </html>

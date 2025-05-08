@@ -24,14 +24,15 @@ def convert_to_jst(utc_time):
 def index():
     conn = get_db_connection()
     cursor = conn.cursor()  # ✅ カーソルを作成
-    cursor.execute('SELECT * FROM blood_pressure ORDER BY date_time DESC')  # ✅ クエリ実行
+    cursor.execute('SELECT id, systolic, diastolic, date_time, note FROM blood_pressure ORDER BY date_time DESC')
     records = cursor.fetchall()  # ✅ 結果を取得
     cursor.close()  # ✅ カーソルを閉じる
 
     updated_records = []
     for record in records:
         record_dict = {
-            'date_time': str(record[3]),  # ✅ `int` を `str` に変換（重要！）
+            'id': record[0],  # ✅ IDを追加！
+            'date_time': str(record[3]),  
             'systolic': record[1],
             'diastolic': record[2],
             'note': record[4]
@@ -104,7 +105,8 @@ def delete_record(id):
     conn.execute('DELETE FROM blood_pressure WHERE id = ?', (id,))
     conn.commit()
     conn.close()
-    return redirect('/')
+    return "", 204  # ✅ 成功レスポンスのみ返す！（リダイレクトなし）
+
 
 @app.route('/add', methods=['GET', 'POST'])
 def add():
