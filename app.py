@@ -68,11 +68,11 @@ def get_chart_data():
     start_date = request.args.get("start")
     end_date = request.args.get("end")
 
-    print(f"【DEBUG】リクエストされた期間: {start_date} 〜 {end_date}") 
+    print(f"【DEBUG】リクエストされた期間: {start_date} 〜 {end_date}")  
 
     if start_date and end_date:
         query = 'SELECT date_time, systolic, diastolic FROM blood_pressure WHERE date_time BETWEEN ? AND ? ORDER BY date_time'
-        records = conn.execute(query, (start_date, end_date)).fetchall()
+        records = conn.execute(query, (start_date + " 00:00:00", end_date + " 23:59:59")).fetchall()  # ✅ 時間も考慮！
     else:
         latest_record = conn.execute('SELECT date_time FROM blood_pressure ORDER BY date_time DESC LIMIT 1').fetchone()
 
@@ -87,22 +87,23 @@ def get_chart_data():
         except ValueError:
             latest_date_dt = datetime.strptime(latest_date, '%Y-%m-%dT%H:%M')
 
-        one_month_ago = (latest_date_dt - timedelta(days=30)).strftime('%Y-%m-%d')
+        one_month_ago = (latest_date_dt - timedelta(days=30)).strftime('%Y-%m-%d 00:00:00')  # ✅ 期間調整！
+        
         query = 'SELECT date_time, systolic, diastolic FROM blood_pressure WHERE date_time BETWEEN ? AND ? ORDER BY date_time'
-        records = conn.execute(query, (one_month_ago, latest_date)).fetchall()
+        records = conn.execute(query, (one_month_ago, latest_date)).fetchall()  # ✅ 「latest_date から1ヶ月」に限定！
 
     conn.close()
 
     jst_data = []
     for record in records:
-        dt_obj = datetime.strptime(record["date_time"], '%Y-%m-%d %H:%M:%S')  # ✅ 変換なしで使用
+        dt_obj = datetime.strptime(record["date_time"], '%Y-%m-%d %H:%M:%S')
         jst_data.append({
-            "date": dt_obj.strftime('%Y-%m-%d %H:%M:%S'),  # ✅ そのままJSTとして利用！
+            "date": dt_obj.strftime('%Y-%m-%d %H:%M:%S'),
             "systolic": record["systolic"],
             "diastolic": record["diastolic"]
-    })
+        })
 
-    print(f"【DEBUG】JST変換後のデータ: {jst_data}") 
+    print(f"【DEBUG】JST変換後のデータ: {jst_data}")  
 
     return json.dumps(jst_data)
 
