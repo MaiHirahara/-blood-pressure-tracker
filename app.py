@@ -37,12 +37,6 @@ def index():
             'note': record[4]
         }
 
-        print(f"【DEBUG】取得した date_time の値: {record_dict['date_time']} （型: {type(record_dict['date_time'])}）")
-        print(f"【DEBUG】元データ: {record[0]}（型: {type(record[0])}）")
-        print(f"【DEBUG】変換後の date_time: {record_dict['date_time']}（型: {type(record_dict['date_time'])}）")
-        print(f"【DEBUG】record の内容: {record}")
-        print(f"【DEBUG】record[0]: {record[0]}（型: {type(record[0])}）")
-
         try:
             dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%d %H:%M:%S')  # ✅ SQLiteのデータはすでに適切なフォーマットのはず！
         except ValueError:
@@ -68,8 +62,7 @@ def get_chart_data():
     start_date = request.args.get("start")
     end_date = request.args.get("end")
 
-    print(f"【DEBUG】リクエストされた期間: {start_date} 〜 {end_date}")  
-
+    
     if start_date and end_date:
         query = 'SELECT date_time, systolic, diastolic FROM blood_pressure WHERE date_time BETWEEN ? AND ? ORDER BY date_time'
         records = conn.execute(query, (start_date + " 00:00:00", end_date + " 23:59:59")).fetchall()  # ✅ 時間も考慮！
@@ -77,7 +70,6 @@ def get_chart_data():
         latest_record = conn.execute('SELECT date_time FROM blood_pressure ORDER BY date_time DESC LIMIT 1').fetchone()
 
         if not latest_record:
-            print("【DEBUG】データなし！")
             return json.dumps([])
 
         latest_date = latest_record["date_time"]
@@ -103,7 +95,6 @@ def get_chart_data():
             "diastolic": record["diastolic"]
         })
 
-    print(f"【DEBUG】JST変換後のデータ: {jst_data}")  
 
     return json.dumps(jst_data)
 
