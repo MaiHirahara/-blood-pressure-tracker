@@ -48,8 +48,7 @@ def index():
         except ValueError:
             dt_obj = datetime.strptime(record_dict['date_time'], '%Y-%m-%dT%H:%M')  # ✅ フォーマットが違う場合も対応
 
-        # ✅ JSTに変換（必要な場合のみ）
-        record_dict['date_time'] = convert_to_jst(dt_obj)
+        record_dict['date_time'] = dt_obj.strftime('%Y-%m-%d %H:%M:%S')  # ✅ そのまま使用！
 
         updated_records.append(record_dict)
 
@@ -96,12 +95,12 @@ def get_chart_data():
 
     jst_data = []
     for record in records:
-        jst_date_time = convert_to_jst(datetime.strptime(record["date_time"], '%Y-%m-%d %H:%M:%S'))
+        dt_obj = datetime.strptime(record["date_time"], '%Y-%m-%d %H:%M:%S')  # ✅ 変換なしで使用
         jst_data.append({
-            "date": jst_date_time,
+            "date": dt_obj.strftime('%Y-%m-%d %H:%M:%S'),  # ✅ そのままJSTとして利用！
             "systolic": record["systolic"],
             "diastolic": record["diastolic"]
-        })
+    })
 
     print(f"【DEBUG】JST変換後のデータ: {jst_data}") 
 
